@@ -157,7 +157,6 @@ def main():
     results_adam = train_model(x_train, y_train, x_test, y_test, BATCH_SIZE, EPOCHS, W1, b1, W2, b2, optimizer_adam)
     print()
 
-    print("Summary:")
     plot_results(results_grad_descent, 0, 3, "Epochs", "Average Loss", get_loss, title="No optimization loss/epoch")
     plot_results(results_grad_descent, 0, 100, "Epochs", "Test set accuracy", get_accuracy,
                  title="No optimization accuracy/epoch")
