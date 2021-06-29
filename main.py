@@ -25,6 +25,16 @@ NUMBER_NODES = 300
 EPOCHS = 10
 BATCH_SIZE = 128
 
+# NN variables
+W1 = None
+W2 = None
+b1 = None
+b2 = None
+x_test = None
+x_train = None
+y_test = None
+y_train = None
+
 
 def get_batch(x_data, y_data, batch_size):
     indexes = np.random.randint(0, len(y_data), batch_size)
@@ -91,21 +101,19 @@ def get_accuracy(result_tuple):
     return result_tuple[2]
 
 
-def main():
+def init_setup():
+    global x_train, x_test, y_train, y_test, W1, W2, b1, b2
     # Load 60_000 rows of 28x28 pixel grayscale images for training
     # and 10_000 rows of same dimension images for testing
     # x_train: (60,000 x 28 x 28), y_train: (60,000)
     # x_test: (10,000 x 28 x 28), y_test: (10,000)
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-
     # normalize the input images i.e. scale them to [0, 1] segment
     x_train = x_train / 255.0
     x_test = x_test / 255.0
-
     # convert x_test to tensor so it can pass through model
     # train data will be converted on the fly
     x_test = tf.Variable(x_test)
-
     # now declare the weights connecting the input to the hidden layer
     # flattened images represent 784 input nodes (28 x 28)
     # with NUMBER_NODES hidden layer nodes
@@ -116,21 +124,40 @@ def main():
     W2 = tf.Variable(tf.random.normal([NUMBER_NODES, 10], stddev=0.03), name='W2')
     b2 = tf.Variable(tf.random.normal([10]), name='b2')
 
+
+def main():
     # setup the optimizer
     optimizer_none = tf.keras.optimizers.SGD(LEARNING_RATE, 0)
     optimizer_momentum = tf.keras.optimizers.SGD(LEARNING_RATE, MOMENTUM_BETA)
     optimizer_RMSProp = tf.keras.optimizers.RMSprop(LEARNING_RATE, RMS_BETA, epsilon=EPSILON_RMSPROP)
-    optimizer_adam = tf.keras.optimizers.Adam(LEARNING_RATE, BETA_1, BETA_2, EPSILON)
 
     # train the model
+    print("Gradient descent without optimizer")
+    init_setup()
     results_grad_descent = train_model(x_train, y_train, x_test, y_test, BATCH_SIZE, EPOCHS, W1, b1, W2, b2,
                                        optimizer_none)
+    print()
+
+    print("Gradient descent with momentum")
+    init_setup()
     results_momentum = train_model(x_train, y_train, x_test, y_test, BATCH_SIZE, EPOCHS, W1, b1, W2, b2,
                                    optimizer_momentum)
+    print()
+
+    print("Gradient descent with RMSProp")
+    init_setup()
     results_RMSprop = train_model(x_train, y_train, x_test, y_test, BATCH_SIZE, EPOCHS, W1, b1, W2, b2,
                                   optimizer_RMSProp)
-    results_adam = train_model(x_train, y_train, x_test, y_test, BATCH_SIZE, EPOCHS, W1, b1, W2, b2, optimizer_adam)
+    print()
 
+    optimizer_adam = tf.keras.optimizers.Adam(LEARNING_RATE, BETA_1, BETA_2, EPSILON)
+
+    print("Gradient descent with Adam")
+    init_setup()
+    results_adam = train_model(x_train, y_train, x_test, y_test, BATCH_SIZE, EPOCHS, W1, b1, W2, b2, optimizer_adam)
+    print()
+
+    print("Summary:")
     plot_results(results_grad_descent, 0, 3, "Epochs", "Average Loss", get_loss, title="No optimization loss/epoch")
     plot_results(results_grad_descent, 0, 100, "Epochs", "Test set accuracy", get_accuracy,
                  title="No optimization accuracy/epoch")
